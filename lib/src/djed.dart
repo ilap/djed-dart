@@ -62,4 +62,10 @@ abstract class Djed {
   double sellStablecoins(double amountSC);
   double buyReservecoins(double amountRC);
   double sellReservecoins(double amountRC);
+
+  static const errorMessage = '';
+
+  void require(bool predicate, {String msg = errorMessage}) {
+    if (!predicate) throw Exception(msg);
+  }
 }

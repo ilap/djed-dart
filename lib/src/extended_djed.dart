@@ -51,7 +51,7 @@ class ExtendedDjed extends Djed {
 
   double calculateBasecoinsForMintedStablecoinsIter(int amountSC,
       {int accuracy = 1}) {
-    // FIXME require(reservesRatio() > pegReservesRatio)
+    require(reservesRatio() > pegReservesRatio);
     var newReserves = reserves;
     var newStablecoins = stablecoins;
     var totalAmountBaseToPay = 0.0;
@@ -75,7 +75,8 @@ class ExtendedDjed extends Djed {
           amountBase * (1 + fee(newReserves, newStablecoins));
       newReserves += amountBaseToPay;
       newStablecoins += (1.0 / accuracy);
-      // FIXME: require(reservesRatio(newReserves, newStablecoins) >= pegReservesRatio);
+      require(reservesRatio(R: newReserves, nsc: newStablecoins) >=
+          pegReservesRatio);
       totalAmountBaseToPay += amountBaseToPay;
     }
 
@@ -83,8 +84,8 @@ class ExtendedDjed extends Djed {
   }
 
   @override
-  double calculateBasecoinsForMintedStablecoins(double  amountSC) {
-    //  FIXME: require(reservesRatio() > pegReservesRatio)
+  double calculateBasecoinsForMintedStablecoins(double amountSC) {
+    require(reservesRatio() > pegReservesRatio);
     final Pt_sc = targetPrice;
 
     double calculateAmountWithDynamicFee(double nsc0, double R0, double t) {
@@ -122,14 +123,15 @@ class ExtendedDjed extends Djed {
     // sanity check
     final newReserveRatio = reservesRatio(
         R: reserves + amountBasecoinsToPay, nsc: stablecoins + amountSC);
-    if (newReserveRatio >= pegReservesRatio) throw Exception('The formulas are not suitable if ratio falls below optimum.');
+    require(newReserveRatio >= pegReservesRatio,
+        msg: 'The formulas are not suitable if ratio falls below optimum.');
 
     return amountBasecoinsToPay;
   }
 
   double calculateBasecoinsForMintedReservecoinsIter(double amountRC,
       {int accuracy = 1}) {
-    //  FIXME: require(amountRC > 0)
+    require(amountRC > 0);
     var newReservecoins = reservecoins;
     var newReserves = reserves;
     var totalAmountBasecoinsToPay = 0.0;
@@ -163,8 +165,8 @@ class ExtendedDjed extends Djed {
   }
 
   @override
-  double calculateBasecoinsForMintedReservecoins(double  amountRC) {
-    //  FIXME: require(amountRC > 0)
+  double calculateBasecoinsForMintedReservecoins(double amountRC) {
+    require(amountRC > 0);
     final R0 = reserves;
     final Nrc0 = reservecoins;
     final Nrc0_plus_N_div_Nrc0 = (Nrc0 + amountRC) / Nrc0;
@@ -315,7 +317,7 @@ class ExtendedDjed extends Djed {
   }
 
   @override
-  double calculateBasecoinsForBurnedStablecoins(double  amountSC) {
+  double calculateBasecoinsForBurnedStablecoins(double amountSC) {
     final Pt_sc = targetPrice;
 
     double calculateVariant1(double nsc0, double R0, double t) {
@@ -343,10 +345,13 @@ class ExtendedDjed extends Djed {
 
     double initRatioAbovePeg(double nsc0, double R0, double t) {
       final rounded_ratio = reservesRatio(R: R0, nsc: nsc0).round();
-      //.setScale(10, BigDecimal.RoundingMode.HALF_UP)
-      // we do rounding to pass the check cause reservesRatio() might be slightly less due to rounding issues when we do BigDecimal->Double conversion in math.pow() on the previous step
-      //  FIXME: require(rounded_ratio >= pegReservesRatio)
-      //  FIXME: require(reservesRatio(R0, Nsc0) < optimalReservesRatio)
+      //FIXME: .setScale(10, BigDecimal.RoundingMode.HALF_UP)
+      // we do rounding to pass the check cause reservesRatio() might be
+      //slightly less due to rounding issues when we do BigDecimal->Double
+      //conversion in math.pow() on the previous step
+      require(rounded_ratio >= pegReservesRatio);
+      require(reservesRatio(R: R0, nsc: nsc0) < optimalReservesRatio);
+
       // calculating how many SCs need to be sold to increase ratio to optimal level
       final amountToOptimum = (R0 - optimalReservesRatio * Pt_sc * nsc0) /
           (Pt_sc * (1 - optimalReservesRatio - bankFee));
@@ -362,7 +367,7 @@ class ExtendedDjed extends Djed {
     }
 
     double initRatioBelowPeg(double nsc0, double R0, double t) {
-      //  FIXME: require(reservesRatio(R0, Nsc0) < pegReservesRatio)
+      require(reservesRatio(R: R0, nsc: nsc0) < pegReservesRatio);
       // calculating how many SCs need to be sold to increase ratio to peg level
 
       final d = (1 - bankFee) / pegReservesRatio;
@@ -390,11 +395,11 @@ class ExtendedDjed extends Djed {
     return amountBasecoinsToReturn;
   }
 
-/// Iterative price calculation for selling reservecoins.
-/// Used for testing purposes to cross-check continuous price calculation. */
+  /// Iterative price calculation for selling reservecoins.
+  /// Used for testing purposes to cross-check continuous price calculation. */
   double calculateBasecoinsForBurnedReservecoinsIter(double amountRC,
       {int accuracy = 1}) {
-    //  FIXME: require(amountRC > 0)
+    require(amountRC > 0);
     var newReservecoins = reservecoins;
     var newReserves = reserves;
     var totalAmountBasecoinsToReturn = 0.0;
@@ -427,8 +432,9 @@ class ExtendedDjed extends Djed {
     return totalAmountBasecoinsToReturn;
   }
 
-  double calculateBasecoinsForBurnedReservecoins(double  amountRC) {
-    //  FIXME: require(amountRC > 0)
+  @override
+  double calculateBasecoinsForBurnedReservecoins(double amountRC) {
+    require(amountRC > 0);
     final R0 = reserves;
     final Nrc0 = reservecoins;
     final Nrc0_min_N_div_Nrc0 = (Nrc0 - amountRC) / Nrc0;
@@ -539,16 +545,17 @@ class ExtendedDjed extends Djed {
   /// @param amountSC amount of stablecoins that will be minted
   /// @return amount of basecoins that is paid to the reserve
   @override
-  double buyStablecoins(double  amountSC) {
-    //  FIXME: require(amountSC > 0)
-    //  FIXME: require(reservesRatio() > pegReservesRatio)
+  double buyStablecoins(double amountSC) {
+    require(amountSC > 0);
+    require(reservesRatio() > pegReservesRatio);
 
     final baseCoinsToPay = calculateBasecoinsForMintedStablecoins(amountSC);
 
     final newReserves = reserves + baseCoinsToPay;
     final newStablecoins = stablecoins + amountSC;
 
-    //  FIXME: require(reservesRatio(newReserves, newStablecoins) >= pegReservesRatio)
+    require(
+        reservesRatio(R: newReserves, nsc: newStablecoins) >= pegReservesRatio);
 
     _reserves = newReserves;
     _stablecoins = newStablecoins;
@@ -560,7 +567,8 @@ class ExtendedDjed extends Djed {
   /// Used for testing purposes to cross-check continuous calculation. */
   double calculateReservecoinsForBurnedStablecoinsIter(int amountSC,
       {int accuracy = 1}) {
-    //  FIXME: require(amountSC <= stablecoins)
+    require(amountSC <= stablecoins);
+
     var newStablecoins = stablecoins;
     var newReservecoins = reservecoins;
     var newReserves = reserves;
@@ -572,7 +580,8 @@ class ExtendedDjed extends Djed {
           reservecoinNominalPrice(R: R, nsc: nsc, nrc: nrc);
     }
 
-    // we also need to track how many basecoins are returned with each peace of stablecoin, because it affects reserves
+    // we also need to track how many basecoins are returned with each peace of
+    //stablecoin, because it affects reserves
     double basecoinsAmount(double R, double nsc) {
       final price = stablecoinNominalPrice(R: R, nsc: nsc);
       return price / accuracy * (1 - bankFee);
@@ -593,7 +602,7 @@ class ExtendedDjed extends Djed {
   }
 
   double calculateReservecoinsForBurnedStablecoins(double amountSC) {
-    //  FIXME: require(amountSC <= stablecoins)
+    require(amountSC <= stablecoins);
 
     if (reservesRatio() < pegReservesRatio) {
       final Pt_sc = targetPrice;
@@ -633,8 +642,9 @@ class ExtendedDjed extends Djed {
   /// @param amountSC amount of stablecoins to sell
   /// @return amount of basecoins withdrawn from the reserve
   @override
-  double sellStablecoins(double  amountSC) {
-    //  FIXME: require(amountSC > 0 && amountSC < stablecoins) // don't allow to sell all stablecoins to avoid division by zero when calculating reserves ratio
+  double sellStablecoins(double amountSC) {
+    // don't allow to sell all stablecoins to avoid division by zero when calculating reserves ratio
+    require(amountSC > 0 && amountSC < stablecoins);
 
     final baseCoinsToReturn = calculateBasecoinsForBurnedStablecoins(amountSC);
     _reserves -= baseCoinsToReturn;
@@ -664,8 +674,8 @@ class ExtendedDjed extends Djed {
   /// Used for testing purposes to cross-check continuous price calculation. */
 
   @override
-  double buyReservecoins(double  amountRC) {
-    //  FIXME: require(amountRC > 0)
+  double buyReservecoins(double amountRC) {
+    require(amountRC > 0);
 
     final baseCoinsToPay = calculateBasecoinsForMintedReservecoins(amountRC);
 
@@ -679,15 +689,17 @@ class ExtendedDjed extends Djed {
   }
 
   @override
-  double sellReservecoins(double  amountRC) {
-    //  FIXME: require(amountRC > 0)
+  double sellReservecoins(double amountRC) {
+    require(amountRC > 0);
 
     final baseCoinsToReturn = calculateBasecoinsForBurnedReservecoins(amountRC);
 
     final newReserves = reserves - baseCoinsToReturn;
     final newReservecoins = reservecoins - amountRC;
 
-    //  FIXME: require(newReservecoins > 0) // don't allow to sell all reservecoins to be able to calculate nominal RC price
+    // don't allow to sell all reservecoins to be able to calculate nominal
+    // RC price
+    require(newReservecoins > 0);
 
     _reserves = newReserves;
     _reservecoins = newReservecoins;

@@ -52,7 +52,9 @@ class MinimalDjed extends Djed {
     ///
     double calculateAmountToPay(
         double amount, double inputReserves, double inputReservecoins) {
-      // FIXME: require(reservecoinNominalPrice(inputReserves, stablecoins, inputReservecoins) >= reservecoinDefaultPrice)
+      require(reservecoinNominalPrice(
+              R: inputReserves, nsc: stablecoins, nrc: inputReservecoins) >=
+          reservecoinDefaultPrice);
 
       final newReservecoins = inputReservecoins + amount;
       final l = normLiabilities(R: inputReserves, nsc: stablecoins);
@@ -94,7 +96,7 @@ class MinimalDjed extends Djed {
   double calculateBasecoinsForBurnedReservecoins(double amountRC) {
     final l = normLiabilities(R: reserves, nsc: stablecoins);
     final newReservecoins = reservecoins - amountRC;
-    // FIXME: require(newReservecoins > 0);
+    require(newReservecoins > 0);
 
     // BigDecimal doesn't allow fractional pow, so we use math.pow(Double,Double) as a workaround.
     // It shouldn't be a problem since we don't expect big numbers here. But it has a side effect of rounding decimal part of BigDecimals,
@@ -117,13 +119,14 @@ class MinimalDjed extends Djed {
 
   @override
   double buyStablecoins(double amountSC) {
-    // FIXME: require(amountSC > 0)
+    require(amountSC > 0);
 
     final amountBase = calculateBasecoinsForMintedStablecoins(amountSC);
 
     final newReserves = reserves + amountBase;
     final newStablecoins = stablecoins + amountSC;
-    //FIXME: assert(acceptableReserveChange(true, false, false, newReserves, newStablecoins));
+    assert(acceptableReserveChange(
+        true, false, false, newReserves, newStablecoins));
 
     _reserves += amountBase;
     _stablecoins += amountSC;
@@ -132,12 +135,13 @@ class MinimalDjed extends Djed {
 
   @override
   double sellStablecoins(double amountSC) {
-    // FIXME require(amountSC > 0)
+    require(amountSC > 0);
 
     final amountBaseToReturn = calculateBasecoinsForBurnedStablecoins(amountSC);
     final newReserves = reserves - amountBaseToReturn;
     final newStablecoins = stablecoins - amountSC;
-    // FIXME require(acceptableReserveChange(false, false, false, newReserves, newStablecoins))
+    require(acceptableReserveChange(
+        false, false, false, newReserves, newStablecoins));
 
     _reserves = newReserves;
     _stablecoins = newStablecoins;
@@ -146,12 +150,13 @@ class MinimalDjed extends Djed {
 
   @override
   double buyReservecoins(double amountRC) {
-    // require(amountRC > 0)
+    require(amountRC > 0);
 
     final amountBase = calculateBasecoinsForMintedReservecoins(amountRC);
     final newReserves = reserves + amountBase;
     final newReservecoins = reservecoins + amountRC;
-    // FIXME require(acceptableReserveChange(false, true, false, newReserves, stablecoins));
+    require(
+        acceptableReserveChange(false, true, false, newReserves, stablecoins));
 
     _reserves = newReserves;
     _reservecoins = newReservecoins;
@@ -160,14 +165,15 @@ class MinimalDjed extends Djed {
 
   @override
   double sellReservecoins(double amountRC) {
-    // FIXME require(amountRC > 0)
+    require(amountRC > 0);
 
     final amountBaseToReturn =
         calculateBasecoinsForBurnedReservecoins(amountRC);
 
     final newReserves = reserves - amountBaseToReturn;
     final newReservecoins = reservecoins - amountRC;
-    // require(acceptableReserveChange(false, false, true, newReserves, stablecoins))
+    require(
+        acceptableReserveChange(false, false, true, newReserves, stablecoins));
 
     _reserves = newReserves;
     _reservecoins = newReservecoins;
@@ -233,8 +239,8 @@ class MinimalDjed extends Djed {
   ///  Utilizes iterative price recalculation. Used mostly for testing purposes to cross-check the price calculation
   /// in the continuous setting.
   ///
-  Future<double> calculateBasecoinsForBurnedReservecoinsIter(int amountRC,
-      {int accuracy = 1}) async {
+  double calculateBasecoinsForBurnedReservecoinsIter(int amountRC,
+      {int accuracy = 1}) {
     var newReserves = reserves;
     var newReservecoins = reservecoins;
     var totalAmountBaseToReturn = 0.0;

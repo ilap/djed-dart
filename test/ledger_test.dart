@@ -10,8 +10,7 @@ void main() {
   final initReservecoinAccounts = <Address, double>{0x1: 1, 0x2: 2, 0x3: 3};
 
   Ledger createDefaultLedger() {
-    final contract =
-        MinimalDjedStablecoinTest.createStablecoinContract(30, 87, 6);
+    final contract = MinimalDjedTest.createStablecoinContract(30, 87, 6);
     return SimpleLedger(contract, initBasecoinAccounts, initStablecoinAccounts,
         initReservecoinAccounts);
   }
@@ -49,9 +48,9 @@ void main() {
         TransferTransaction(0x1, 0x2, 5, CoinType.reserveCoin)
       ];
 
-      badTxs.forEach((tx) {
+      for (var tx in badTxs) {
         expect(() => ledger.addTransaction(tx), throwsException);
-      });
+      }
 
       // check final ledger state
       assert(ledger.basecoinAccounts.length == 3);
@@ -94,9 +93,9 @@ void main() {
         BuyStablecoinTransaction(0x0, 5)
       ];
 
-      badTxs.forEach((tx) {
+      for (var tx in badTxs) {
         expect(() => ledger.addTransaction(tx), throwsException);
-      });
+      }
 
       assert(ledger.contract.reserves == 30 + amountBaseToPay);
       assert(ledger.contract.stablecoins == 87 + 5);
@@ -126,9 +125,9 @@ void main() {
         SellStablecoinTransaction(0x0, 5)
       ];
 
-      badTxs.forEach((tx) {
+      for (var tx in badTxs) {
         expect(() => ledger.addTransaction(tx), throwsException);
-      });
+      }
 
       assert(ledger.contract.stablecoins == 87 - 10);
     });
@@ -157,9 +156,9 @@ void main() {
         BuyReservecoinTransaction(0x0, 1)
       ];
 
-      badTxs.forEach((tx) {
+      for (var tx in badTxs) {
         expect(() => ledger.addTransaction(tx), throwsException);
-      });
+      }
 
       assert(contract.reservecoins == 6 + 2);
     });
@@ -183,14 +182,14 @@ void main() {
       assert(contract.reservecoins == 6 - amountRC);
 
       final badTxs = <Transaction>[
-        SellStablecoinTransaction(0x1, 2),
+        SellStablecoinTransaction(0x1, 55),
         SellStablecoinTransaction(0x1, 0),
         SellStablecoinTransaction(0x0, 5)
       ];
 
-      badTxs.forEach((tx) {
+      for (var tx in badTxs) {
         expect(() => ledger.addTransaction(tx), throwsException);
-      });
+      }
       assert(contract.reservecoins == 6 - amountRC);
     });
 
@@ -200,18 +199,19 @@ void main() {
       final txs = <Transaction>[
         TransferTransaction(0x1, 0x2, 1, CoinType.baseCoin),
         BuyStablecoinTransaction(0x3, 1),
+
         /// FIXME BuyStablecoinTransaction(0x1, 1000), // invalid tx
         SellReservecoinTransaction(0x2, 1)
       ];
 
-      txs.forEach((tx) {
-       expect(() => ledger.addTransaction(tx), returnsNormally);
-      });
+      for (var tx in txs) {
+        expect(() => ledger.addTransaction(tx), returnsNormally);
+      }
 
       assert(ledger.transactionsHistory.length == 3);
       assert(ledger.transactionsHistory[0] == txs[0]);
       assert(ledger.transactionsHistory[1] == txs[1]);
-      assert(ledger.transactionsHistory[2] == txs[3]);
+      assert(ledger.transactionsHistory[2] == txs[2]);
     });
   });
 }

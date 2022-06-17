@@ -1,0 +1,15 @@
+name: djed
+description: The Dart implementation of the Djed stablecoin algorythm
+version: 0.1.0
+
+
+environment:
+  sdk: '>=2.17.3 <3.0.0'
+
+dev_dependencies:
+  lints: ^2.0.0
+  test: ^1.21.2
+  benchmark_harness: ^2.1.0
+
+dependencies: 
+  tuple: ^2.0.0

@@ -49,7 +49,7 @@ class ExtendedDjed extends Djed {
     return nrc != 0 ? equity(R: R, nsc: nsc) / nrc! : reservecoinDefaultPrice;
   }
 
-  double calculateBasecoinsForMintedStablecoinsIter(int amountSC,
+  double calculateBasecoinsForMintedStablecoinsIter(double amountSC,
       {int accuracy = 1}) {
     require(reservesRatio() > pegReservesRatio);
     var newReserves = reserves;
@@ -73,6 +73,7 @@ class ExtendedDjed extends Djed {
       final amountBase = price / accuracy;
       final amountBaseToPay =
           amountBase * (1 + fee(newReserves, newStablecoins));
+
       newReserves += amountBaseToPay;
       newStablecoins += (1.0 / accuracy);
       require(reservesRatio(R: newReserves, nsc: newStablecoins) >=
@@ -287,7 +288,7 @@ class ExtendedDjed extends Djed {
 
   /// Iterative price calculation for selling stablecoins.
   /// Used for testing purposes to cross-check continuous price calculation. */
-  double calculateBasecoinsForBurnedStablecoinsIter(int amountSC,
+  double calculateBasecoinsForBurnedStablecoinsIter(double amountSC,
       {int accuracy = 1}) {
     var newReserves = reserves;
     var newStablecoins = stablecoins;
@@ -310,7 +311,7 @@ class ExtendedDjed extends Djed {
           amountBase * (1 - fee(newReserves, newStablecoins));
       newReserves -= amountBaseToReturn;
       newStablecoins -= (1.0 / accuracy);
-      return totalAmountBaseToReturn += amountBaseToReturn;
+      totalAmountBaseToReturn += amountBaseToReturn;
     }
 
     return totalAmountBaseToReturn;
@@ -344,9 +345,9 @@ class ExtendedDjed extends Djed {
     }
 
     double initRatioAbovePeg(double nsc0, double R0, double t) {
-      final rounded_ratio = reservesRatio(R: R0, nsc: nsc0).round();
-      //FIXME: .setScale(10, BigDecimal.RoundingMode.HALF_UP)
-      // we do rounding to pass the check cause reservesRatio() might be
+      final rounded_ratio =
+          double.tryParse(reservesRatio(R: R0, nsc: nsc0).toStringAsFixed(10))!;
+      //NOTE: we do rounding to pass the check cause reservesRatio() might be
       //slightly less due to rounding issues when we do BigDecimal->Double
       //conversion in math.pow() on the previous step
       require(rounded_ratio >= pegReservesRatio);
@@ -565,7 +566,7 @@ class ExtendedDjed extends Djed {
 
   /// Iterative calculation of compensated reservecoins for selling stablecoins.
   /// Used for testing purposes to cross-check continuous calculation. */
-  double calculateReservecoinsForBurnedStablecoinsIter(int amountSC,
+  double calculateReservecoinsForBurnedStablecoinsIter(double amountSC,
       {int accuracy = 1}) {
     require(amountSC <= stablecoins);
 
@@ -595,7 +596,7 @@ class ExtendedDjed extends Djed {
       newReservecoins += amountReservecoinsToReturn;
       newStablecoins -= (1.0 / accuracy);
       newReserves -= basecoinsAmount(newReserves, newStablecoins);
-      return totalAmountReservecoinsToReturn += amountReservecoinsToReturn;
+      totalAmountReservecoinsToReturn += amountReservecoinsToReturn;
     }
 
     return totalAmountReservecoinsToReturn;

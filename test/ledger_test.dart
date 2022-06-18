@@ -146,7 +146,7 @@ void main() {
           initBasecoinAccounts[0x1]! - amountBaseToPay);
       assert(
           ledger.reservecoinAccounts[0x1] == initReservecoinAccounts[0x1]! + 2);
-      // FIXME: assert(ledger.stablecoinAccounts == initStablecoinAccounts);
+
       assert(contract.reserves == 30 + amountBaseToPay);
       assert(contract.reservecoins == 6 + 2);
 
@@ -199,19 +199,19 @@ void main() {
       final txs = <Transaction>[
         TransferTransaction(0x1, 0x2, 1, CoinType.baseCoin),
         BuyStablecoinTransaction(0x3, 1),
-
-        /// FIXME BuyStablecoinTransaction(0x1, 1000), // invalid tx
+        BuyStablecoinTransaction(0x1, 1000),
         SellReservecoinTransaction(0x2, 1)
       ];
 
-      for (var tx in txs) {
-        expect(() => ledger.addTransaction(tx), returnsNormally);
-      }
+      expect(() => ledger.addTransaction(txs[0]), returnsNormally);
+      expect(() => ledger.addTransaction(txs[1]), returnsNormally);
+      expect(() => ledger.addTransaction(txs[2]), throwsException);
+      expect(() => ledger.addTransaction(txs[3]), returnsNormally);
 
       assert(ledger.transactionsHistory.length == 3);
       assert(ledger.transactionsHistory[0] == txs[0]);
       assert(ledger.transactionsHistory[1] == txs[1]);
-      assert(ledger.transactionsHistory[2] == txs[2]);
+      assert(ledger.transactionsHistory[2] == txs[3]);
     });
   });
 }

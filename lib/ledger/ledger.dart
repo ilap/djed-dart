@@ -69,7 +69,6 @@ class SimpleLedger extends Ledger {
 
         break;
       case BuyStablecoinTransaction:
-
         tx as BuyStablecoinTransaction;
         final amountBaseToPay =
             contract.calculateBasecoinsForMintedStablecoins(tx.amountSC);
@@ -122,7 +121,6 @@ class SimpleLedger extends Ledger {
 
         break;
       case SellReservecoinTransaction:
-
         tx as SellReservecoinTransaction;
         final amount = reservecoinAccounts[tx.from] ?? 0;
 

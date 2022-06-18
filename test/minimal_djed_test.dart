@@ -15,8 +15,8 @@ class MinimalDjedTest {
 
     oracle.updateConversionRate(PegCurrency, BaseCoin, 0.2);
 
-    return MinimalDjed(oracle, fee, minReserveRatio, maxReserveRatio,
-        defaultPrice, initReserves, initStablecoins, initReservecoins);
+    return MinimalDjed(oracle, fee, minReserveRatio, defaultPrice,
+        maxReserveRatio, initReserves, initStablecoins, initReservecoins);
   }
 }
 

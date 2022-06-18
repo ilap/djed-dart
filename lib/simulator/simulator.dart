@@ -20,9 +20,9 @@ class Simulator {
       //print(ledger.contract);
 
       final transactions = players.map((_) {
-        final result  = _.newRoundCallback(ledger, i);
+        final result = _.newRoundCallback(ledger, i);
         return result;
-    });
+      });
 
       for (var tx in transactions) {
         /// Catch the proper error

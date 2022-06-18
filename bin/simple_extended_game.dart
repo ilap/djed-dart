@@ -62,8 +62,8 @@ void main() {
   final contract = MinimalDjed(oracle, bankFee, reservecoinDefaultPrice,
       minReserveRatio, maxReserveRatio, 20, 60, 5);
 
-  final ledger = SimpleLedger(
-      contract, initBasecoinAccounts, initStablecoinAccounts, {});
+  final ledger =
+      SimpleLedger(contract, initBasecoinAccounts, initStablecoinAccounts, {});
 
   final players = <Player>[StablecoinBuyer(0x1), StablecoinSeller(0x2)];
 

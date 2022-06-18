@@ -45,7 +45,7 @@ abstract class Djed {
   double stablecoinNominalPrice({double? R, double? nsc});
 
   double reservesRatio({double? R, double? nsc}) {
-    return (R ?? reserves) / targetLiabilities(nsc: nsc);
+    return (R ?? reserves) / targetLiabilities(nsc: nsc ?? stablecoins);
   }
 
   double equity({double? R, double? nsc}) {

@@ -50,7 +50,7 @@ class BuyReservecoinTransaction extends ContractCallTransaction {
   final double amountRC;
   @override
   String toString() =>
-      'BuyReservecoinTransaction : $id, from: $from, amountSC: $amountRC';
+      'BuyReservecoinTransaction : $id, from: $from, amountRC: $amountRC';
 }
 
 class SellReservecoinTransaction extends ContractCallTransaction {
@@ -60,5 +60,5 @@ class SellReservecoinTransaction extends ContractCallTransaction {
 
   @override
   String toString() =>
-      'SellReservecoinTransaction: $id, from: $from, amountSC: $amountRC';
+      'SellReservecoinTransaction: $id, from: $from, amountRC: $amountRC';
 }

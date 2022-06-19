@@ -19,9 +19,9 @@ class Simulator {
 
       //print(ledger.contract);
 
-      players.forEach((_) {
+      for (var player in players) {
         // It's a one length or empty  list
-        final txs = _.newRoundCallback(ledger, i);
+        final txs = player.newRoundCallback(ledger, i);
         if (txs.isNotEmpty) {
           try {
             ledger.addTransaction(txs.first);
@@ -30,7 +30,7 @@ class Simulator {
             print('Transaction rejected: ${txs.toString()}');
           }
         }
-      });
+      }
 
       print('Ending round: $i');
       //print(ledger.contract);

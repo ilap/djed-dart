@@ -2,6 +2,7 @@
 
 import 'dart:io';
 import 'dart:math';
+import 'dart:developer' as logging;
 
 import 'package:djed/simulator.dart';
 import 'package:djed/stablecoin.dart';
@@ -27,10 +28,6 @@ import 'package:djed/stablecoin.dart';
 /// - nominal price: shows amount of basecoins worth of **one** stable- or one reservecoin.
 ///
 void main() async {
-  final initBasecoinAccounts = <Address, double>{0x1: 100000};
-  final initStablecoinAccounts = <Address, double>{0x1: 100000};
-  final initReservecoinAccounts = <Address, double>{0x1: 100000};
-
   // Load ~1-min historical data retrieved from Kaggle.com.
   final lines = File('./assets/adausd.csv').readAsLinesSync();
 
@@ -38,10 +35,11 @@ void main() async {
   final xrateLength = xrates.length;
 
   // It emulates an 12-min Oracle, on averate
-  final skipNext = 12;
+  final skip = 12;
 
-  final xrate = double.tryParse(xrates.first[1])!;
-  final historySize = xrateLength ~/ skipNext;
+  // X-change rate is ADA2USD meaning 0.2c means 5ADA
+  final xrate = 1.0 / double.tryParse(xrates.first[1])!;
+  final historySize = xrateLength ~/ skip;
 
   final oracle = SimpleMapOracle();
   oracle.updateConversionRate(PegCurrency, BaseCoin, xrate);
@@ -58,27 +56,32 @@ void main() async {
   final pt_min = 0.5;
 
   // fee deviation coefficients
-  final k_rm_def = 1.1;
-  final k_rr_def = 1.1;
-  final k_sm_def = 1.1;
-  final k_sr_def = 1.1;
+  final k_rm = 1.1;
+  final k_rr = 1.1;
+  final k_sm = 1.1;
+  final k_sr = 1.1;
 
   final initialRC = 100000.0; // 10K Shen
   final initialSC = 100000.0; // 10K Djed initially
 
   // The initial reserve is the initial Djed at xrate price
-  // FIXME: refactor everything  to BigInt .ceilToDouble();
-  final initialReserves = (initialSC / xrate);
+  // NOTE: refactor everything  to BigInt .ceilToDouble();
+  final initialReserves = (initialSC * xrate + initialRC * pt_min);
 
-  final contract = ExtendedDjed(oracle, fee0, pt_min, r_peg, r_opt, k_rm_def,
-      k_rr_def, k_sm_def, k_sr_def, initialReserves, initialSC, initialRC);
+  final initBasecoinAccounts = <Address, double>{0x1: initialReserves};
+  final initStablecoinAccounts = <Address, double>{0x1: initialSC};
+  final initReservecoinAccounts = <Address, double>{0x1: initialRC};
+
+  final contract = ExtendedDjed(oracle, fee0, pt_min, r_peg, r_opt, k_rm, k_rr,
+      k_sm, k_sr, initialReserves, initialSC, initialRC);
 
   final ledger = SimpleLedger(contract, initBasecoinAccounts,
       initStablecoinAccounts, initReservecoinAccounts);
+
+  // The player's order is important. 1st RC trader & then SC user.
   final players = <Player>[ReservecoinTrader(0x1), StablecoinUser(0x1)];
 
-  Simulator(ledger, HistoricalGame(xrates, skipNext), players, historySize)
-      .run();
+  Simulator(ledger, HistoricalGame(xrates, skip), players, historySize).run();
 }
 
 /// `r_opt > r_peg > 1`
@@ -97,28 +100,27 @@ class HistoricalGame extends Environment {
 
   @override
   Ledger newRoundCallback(Ledger ledger, Address round) {
-    final oldRate =
-        ledger.contract.oracle.conversionRate(PegCurrency, BaseCoin);
+    //final oldRate =
+    //    ledger.contract.oracle.conversionRate(PegCurrency, BaseCoin);
 
-    final newRate = double.tryParse(xrates[(round + 1) * skip][1])!;
+    final xrate = xrates[(round + 1) * skip];
+    final newRate = 1.0 / double.tryParse(xrate[1])!;
+    final dateTime =
+        DateTime.fromMillisecondsSinceEpoch(int.tryParse(xrate[0])!);
 
     final contract = ledger.contract;
     contract.oracle.updateConversionRate(PegCurrency, BaseCoin, newRate);
 
-    var tp = contract.targetPrice;
-    var ap = newRate;
-    print(
-        'P_sc: $ap, Pt_sc: tp, Ln:  ${contract.normLiabilities()}, Lt: ${contract.targetLiabilities()}');
-
-    //logger.trace('Bank state: ' + /** dateTime+ */' R: ' + contract.getReservesAmount + ', Nsc: ' + contract.getStablecoinsAmount +', Nrc: ' + contract.getReservecoinsAmount + ', X-Rate diff: ' + math.abs(oldRate.toDouble - newRate) * 100 + '%')
-
     final ratio = contract.reservesRatio();
+    logging.log(
+        'Bank state: $dateTime  R: ${contract.reserves}, Nsc: ${contract.stablecoins},'
+        ' Nrc: ${contract.reservecoins}, r: $ratio');
 
     if (ratio < 1.5) {
-      print('Reserves ratio is below minimal limit!: ${ratio.toString()}');
+      logging.log('Reserves ratio is below minimal limit!: $ratio');
     }
     if (ratio < 1.0) {
-      print('CRITICAL: Reserves are below liabilities!: ${ratio.toString()}');
+      logging.log('CRITICAL: Reserves are below liabilities!: $ratio}');
     }
     return ledger;
   }
@@ -146,7 +148,7 @@ class ReservecoinTrader extends Player {
 
   @override
   List<Transaction> newRoundCallback(Ledger ledger, int round) {
-    var myRCs = ledger.reservecoinAccounts[address] ?? 0;
+    //var myRCs = ledger.reservecoinAccounts[address] ?? 0;
 
     final currentPrice = ledger.contract.reservecoinNominalPrice();
 
@@ -154,19 +156,20 @@ class ReservecoinTrader extends Player {
     //.reservecoinNominalPrice(nrc: 0);
     // if Nrc = 0 then default reserve coin price
 
-    var buyingPressure = currentPrice != 0 ? targetPrice / currentPrice : 0.0;
+    var buyingPressure = currentPrice != 0 ? currentPrice / targetPrice : 0.0;
 
-    var amount = (buyingPressure * 20000);
+    var amount = (buyingPressure * 5000);
 
-    final txs = <Transaction>[];
-    if (_prevPrice != 0 && buyingPressure >= 1.0) {
-      print(
-          'Reservecoin price is decreasing compared to the target price. $buyingPressure  Ptsc: $currentPrice, Buying: $amount RC');
-      txs.add(BuyReservecoinTransaction(address, amount));
-    } else if (_prevPrice != 0 && buyingPressure < 1.0) {
-      print(
-          'Reservecoin price is decreasing compared to the target price. $buyingPressure  Ptsc: $currentPrice, Selling: $amount RC');
-      txs.add(SellReservecoinTransaction(address, amount));
+    final txs = _prevPrice == 0
+        ? <Transaction>[]
+        : buyingPressure >= 1.0
+            ? [BuyReservecoinTransaction(address, amount)]
+            : [SellReservecoinTransaction(address, amount)];
+
+    if (txs.isNotEmpty) {
+      logging.log(
+        txs[0].toString(),
+      );
     }
 
     _prevPrice = currentPrice;
@@ -193,38 +196,26 @@ class ReservecoinTrader extends Player {
 class StablecoinUser extends Player {
   StablecoinUser(super.address);
 
-  static const maxAmount = 100000000; //100M
-  static const growth =
-      53; // 5% more buy then selling to simulate constant 5% growth long term
+  // maxAMount of 100M Djed
+  static const maxAmount = 100000000;
+
+  // 5% less sells then buys to simulate constant 5% growth long term
+  static const growth = 47;
 
   /// The TVL increases 0.5% per day meaning reaches 100M
   @override
   List<Transaction> newRoundCallback(Ledger ledger, int round) {
     var myStablecoins = ledger.stablecoinAccounts[address] ?? 0;
-    final currentPrice =
-        ledger.contract.oracle.conversionRate(PegCurrency, BaseCoin);
 
-    var luck = Random().nextInt(100);
+    final lucky = Random().nextInt(100) / growth;
 
-    final amount = 10000.0;
+    final amount = lucky * 10000.0;
 
-    final txs = <Transaction>[];
-
-    if (myStablecoins == 0) {
-      // Initial buy of 10K when there is enough RC
-
-      print('Initial Stablecoin buy if amount Reserves allows it: $amount  SC');
-      BuyStablecoinTransaction(address, amount);
-    } else if (myStablecoins <= maxAmount) {
-      final amount = myStablecoins * growth;
-      if (luck <= growth) {
-        print('Buying stablecoin: $amount SC');
-        txs.add(BuyStablecoinTransaction(address, amount));
-      } else {
-        print('Selling stablecoin: $amount SC');
-        txs.add(SellStablecoinTransaction(address, amount));
-      }
-    }
+    final List<Transaction> txs = (myStablecoins == 0)
+        ? <Transaction>[BuyStablecoinTransaction(address, amount)]
+        : (lucky >= 1)
+            ? <Transaction>[BuyStablecoinTransaction(address, amount)]
+            : <Transaction>[SellStablecoinTransaction(address, amount)];
 
     return txs;
   }

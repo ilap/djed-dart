@@ -5,7 +5,7 @@ Djed-Dart is the dart implementation of the official [`Scala` based Djed Stablec
 
 ## Features
 
-It contains all the original code's unittest and games. In addition, it has a hisstorical ADA price based game featuring `Extended Djed`.
+It contains almost all the original code's unittest and games. In addition, it has a historical ADA price based game featuring `Extended Djed`.
 
 ## Getting started
 

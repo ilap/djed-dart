@@ -1,7 +1,6 @@
 name: djed
-description: The Dart implementation of the Djed stablecoin algorythm
-version: 0.1.0
-
+description: The Dart implementation of the Djed, the formally verified Crypto-Backed Pegged Algorithmic Stablecoin
+version: 0.1.1
 
 environment:
   sdk: '>=2.17.3 <3.0.0'

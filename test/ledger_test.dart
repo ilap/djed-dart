@@ -1,7 +1,6 @@
 import 'package:test/test.dart';
 
-import 'package:djed/ledger/ledger.dart';
-import 'package:djed/ledger/transaction.dart';
+import 'package:djed/simulator.dart';
 import 'minimal_djed_test.dart';
 
 void main() {
@@ -24,7 +23,8 @@ void main() {
 
       assert(ledger.basecoinAccounts[0x1] == initBasecoinAccounts[0x1]! - 1.3);
       assert(ledger.basecoinAccounts[0x2] == initBasecoinAccounts[0x2]! + 1.3);
-      // Map ar not comparable assert(ledger.stablecoinAccounts == initStablecoinAccounts);
+      // NOTE: Maps are not comparable in Dart.
+      // assert(ledger.stablecoinAccounts == initStablecoinAccounts);
       // assert(ledger.reservecoinAccounts == initReservecoinAccounts);
 
       final tx2 = TransferTransaction(0x2, 0x5, 10, CoinType.stableCoin);

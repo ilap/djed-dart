@@ -1,6 +1,6 @@
 import 'package:test/test.dart';
 
-import 'package:djed/djed.dart';
+import 'package:djed/stablecoin.dart';
 
 class MinimalDjedTest {
   static const double bankFee = 0.01;
@@ -11,7 +11,7 @@ class MinimalDjedTest {
   static Djed createStablecoinContract(
       double initReserves, double initStablecoins, double initReservecoins,
       {double fee = bankFee, double defaultPrice = reservecoinDefaultPrice}) {
-    final oracle = MapOracle();
+    final oracle = SimpleMapOracle();
 
     oracle.updateConversionRate(PegCurrency, BaseCoin, 0.2);
 

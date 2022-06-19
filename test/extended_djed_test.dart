@@ -2,7 +2,7 @@
 
 import 'package:test/test.dart';
 
-import 'package:djed/djed.dart';
+import 'package:djed/stablecoin.dart';
 
 class ExtendedDjedTest {
   static const double bankFee = 0.03;
@@ -24,7 +24,7 @@ class ExtendedDjedTest {
       double k_sr = k_sr_def,
       double defaultPrice = reservecoinDefaultPrice,
       double optReservesRatio = optimalReserveRatio}) {
-    final oracle = MapOracle();
+    final oracle = SimpleMapOracle();
 
     oracle.updateConversionRate(PegCurrency, BaseCoin, exchangeRate);
 

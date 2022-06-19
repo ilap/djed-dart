@@ -68,4 +68,16 @@ abstract class Djed {
   void require(bool predicate, {String msg = errorMessage}) {
     if (!predicate) throw Exception(msg);
   }
+
+  @override
+  String toString() {
+    return 'Stablecoin state:\n'
+        '\tBasecoin amount: $reserves\n'
+        '\tStablecoin amount: $stablecoins\n'
+        '\tReservecoin amount: $reservecoins\n'
+        '\tStablecoin nominal price: ${stablecoinNominalPrice()}\n'
+        '\tReservecoin nominal price: ${reservecoinNominalPrice()}\n'
+        '\tReserve ratio: ${reservesRatio()}\n'
+        '\tConversion rate: PegCurrency ->  BaseCoin: $targetPrice';
+  }
 }

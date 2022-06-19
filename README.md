@@ -61,9 +61,20 @@ $ cd djed-dart && dart pub get
 # Run a game simulation
 $ dart example/historical_extended_game.dart
 ...
+Starting round: 47357
+Bank state: 2022-06-03 19:43:00.000  R: 1001492699.8285034, Nsc: 237060000.0, Nrc: 1067843.0476931066, r: 2.424562032222123, x-rate: 0.57391
+Transaction rejected: [BuyReservecoinTransaction : 16556297171200239, from: 1, amountRC: 551046.7289309289]
+Transaction rejected: [BuyStablecoinTransaction  : 16556297171200178, from: 1, amountSC: 10000.0]
+Ending round: 47357
+End of simulation. Stablecoin state:
+	Basecoin amount: 1001492699.8285034
+	Stablecoin amount: 237060000.0
+	Reservecoin amount: 1067843.0476931066
+	Stablecoin nominal price: 1.7424334826018015
+	Reservecoin nominal price: 551.0467289309289
+	Reserve ratio: 2.424562032222123
+	Conversion rate: PegCurrency ->  BaseCoin: 1.7424334826018015
 ```
-
-
 
 # Credits
 - [Original Scala based prototype](https://github.com/input-output-hk/djed-stablecoin-prototype)

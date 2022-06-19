@@ -13,11 +13,11 @@ class Simulator {
   final int duration;
 
   void run() {
+    print(ledger.contract);
+
     for (var i = 0; i < duration; i++) {
       print('Starting round: $i');
       _ledger = env.newRoundCallback(ledger, i);
-
-      //print(ledger.contract);
 
       for (var player in players) {
         // It's a one length or empty  list

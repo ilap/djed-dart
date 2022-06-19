@@ -13,8 +13,9 @@ import 'package:djed/stablecoin.dart';
 /// The assumptions are:
 /// 1. that the stablecoins (SC) will have an exponential growth to some maximum market cap (maxMarketCap).
 /// 2. this `maxMarketCap` depends on the optimal reserves driven by the reserve coin (RC) trades.
-/// 	- Assuming it will reach some max capacity e.g., plateau.
-/// 3. the growth of stable coins are not heavily impacted by base coin's (BC e.g., ADA) price fluctuation (this assumption is based on some historical data of the DAI and MakerDAO)
+/// 	- Assuming it will reach some max capacity at 100M Djed e.g., plateau.
+/// 3. the growth of the stable coins are not heavily impacted by base coin's (BC e.g., ADA) price fluctuation
+///   - this assumption is based on some historical data of the DAI and MakerDAO
 /// 4. the supply and demand of the reserve coins are based on the reserves ratio, this incentives are  highly dependent of the base coin's price.
 /// 5. the reserve coins' `fee` should be high enough meaning have enough impact for having some incentives for buying and selling RCs and should not depend on only base coins' exchange rate.
 ///
@@ -24,7 +25,6 @@ import 'package:djed/stablecoin.dart';
 ///   - e.g., 1 Djed always 1 USD that you can buy based on the base coin's (ADA's) actual price.
 ///   - e.g. While 1 Djed is always 1 USD, 1 Shen is initially 0.5 Djed i.e. `2 Shen = 1 Djed`, but RC's price can change.
 /// - target liabilities: represent the full amount of debt to stablecoins holders
-/// - nominal liabilities:
 /// - nominal price: shows amount of basecoins worth of **one** stable- or one reservecoin.
 ///
 void main() async {
@@ -61,16 +61,16 @@ void main() async {
   final k_sm = 1.1;
   final k_sr = 1.1;
 
-  final initialRC = 100000.0; // 10K Shen
-  final initialSC = 100000.0; // 10K Djed initially
+  final initialRC = 100000.0; // 100K Shen
+  final initialSC = 100000.0; // 100K Djed initially
 
   // The initial reserve is the initial Djed at xrate price
-  // NOTE: refactor everything  to BigInt .ceilToDouble();
+  // NOTE: refactor everything  to BigInt;
   final initialReserves = (initialSC * xrate + initialRC * pt_min);
 
-  // Put enough money to buy stablecoins by the users. + 10BN
+  // Put enough money to buy stablecoins by the users. + 10BN ADA
   final initBasecoinAccounts = <Address, double>{
-    0x1: initialReserves + 10000000000
+    0x1: initialReserves + 1000000000
   };
   final initStablecoinAccounts = <Address, double>{0x1: initialSC};
   final initReservecoinAccounts = <Address, double>{0x1: initialRC};
@@ -87,15 +87,18 @@ void main() async {
   Simulator(ledger, HistoricalGame(xrates, skip), players, historySize).run();
 }
 
-/// `r_opt > r_peg > 1`
 ///
-/// Reference: [Djed: A Formally Verified Crypto-Backed Pegged Algorithmic Stablecoin](https://eprint.iacr.org/2021/1069.pdf)
+/// Historical data represents the past trades meaning the result of pressure or forces of the market.
+/// When the price goes higher the demand is higher then supply and vice versa.
 ///
 /// Operations:
 /// 1. `buyStablecoins` : mints new SCs, increasing reserves, but decreasing reserve ratio.
 /// 2. `sellStablecoins`: burns SCs, paying back from reserves, decreasing reserves and increasing reserve ratio.
 /// 3. `buyReservecoins` : mint new RCs, increasing both, reservers and reserve ratio, but dilutes relative shares of existing RC holders.
 /// 4. `sellReservecoins`: burn RCs, paying back from reserves, decreases the reserve ratio and increase relative shares of exisitn RC holder.
+///
+/// Reference: [Djed: A Formally Verified Crypto-Backed Pegged Algorithmic Stablecoin](https://eprint.iacr.org/2021/1069.pdf)
+///
 class HistoricalGame extends Environment {
   HistoricalGame(this.xrates, this.skip);
   final List<List<String>> xrates;
@@ -130,17 +133,16 @@ class HistoricalGame extends Environment {
 }
 
 ///
-/// Historical data represents the past trades meaning the result of pressure or forces of the market.
-/// When the price goes higher the demand is higher then supply and vice versa.
+/// In this game the the RC trader must maintain the reserve coin balance.
 ///
-/// In this game the nr. of RC traders is 10% of the SC traders. Though their number is less than other traders
-/// they must maintaing the reserve coin balance.
+/// The model is simple, when `r` reserve ratio goes below the `r_opt` ratio
+/// then buying pressure is higher then selling one and vice versa.
 ///
-/// Dynamic fee is equal /w `bankFee` when `r = r_opt` and increases when reserve ratio is away from `r_opt`.
+/// Dynamic `buying fee` is equal /w bankFee (`fee0`) when `r < r_opt` and
+/// it increases when reserve ratio is away from `r_opt`.
+/// While `dynamic selling fee` is the opposite i.e., `fee0` wehn `r >= r_opt`.
+///
 /// This incentives the RC traders to maintain equlibirium.
-///
-/// The model is simple, when RCs goes below the target price e.g., 0.5 (2Shen  == 1 Djed) thie buying pressure is higher
-/// then selling one and vice versa
 ///
 class ReservecoinTrader extends Player {
   ReservecoinTrader(super.address);
@@ -178,22 +180,29 @@ class ReservecoinTrader extends Player {
 }
 
 ///
-/// In this game we assume a 0 deposit of Djed that should increasingly grow to a 100M TVL
-/// which is being maintainanced at that level.
-/// There are 1000 stable coin trader which can have two times bigger SC holding than the average 100K
+/// In this game we assume certain deposit of Djed (due to the fact that Extended
+/// Djed does not consider `R=0`, `Nsc=0` and `Nrc=0` initial state) which
+/// should increasingly grow to a 100M maximum TVL. And this TVL is being
+/// maintainaned at that level.
 ///
-/// To be able to mint SC to reach the required TVL, the reserve coin traders must (mostly) buy and sell
-/// RCs (Shen) independently of the marketprice of to base coin (ADA)
+/// To be able to mint SC to reach the required TVL, the reserve coin traders
+/// must mostly buy then sell. Keep in mind that RCs (Shen) are (slightly)
+/// independent of the marketprice of to base coin (ADA).
 ///
-/// While the SC buyers/sellers should follow some historical SC grow similar to some other stable coins e.g., DAI or MakerDAO.
-/// The initial market cap of the SC is 10K whihc will grow gradually to 100m in 200 days, therefore its
-/// grow can be simulated as: `10K*x^200 = 100m` e.g., x=Surd[10000,200] ~= 1.0471285
+/// While the SC users (`buyers`/`sellers`) should follow some historical
+/// behaviour of the SC growth, similar to some other stable coins e.g.,
+/// `DAI` or `MakerDAO` etc.
+///
+/// The initial market cap of the SC is 10K which will grow gradually to the
+/// 100M in around ~200 days. Therefore its grow can be simulated as:
+/// `10K*x^200 = 100m` e.g., `x=Surd[10000,200] ~= 1.0471285` (It's not used
+/// in the code below)
 ///
 class StablecoinUser extends Player {
   StablecoinUser(super.address);
 
-  // maxAMount of 100M Djed
-  static const maxAmount = 100000000;
+  // maxTVL of 100M Djed
+  static const maxTVL = 100000000;
 
   // 15% more buys than sells to simulate constant growth long term
   static const growth = 65;
@@ -205,7 +214,7 @@ class StablecoinUser extends Player {
 
     final rand = Random().nextInt(100);
 
-    final lucky = myStablecoins > maxAmount ? 100 / rand : growth / rand;
+    final lucky = myStablecoins > maxTVL ? 100 / rand : growth / rand;
 
     final amount = 10000.0;
 

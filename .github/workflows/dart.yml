@@ -3,7 +3,7 @@ name: Dart Test CI
 on:
   push:
     branches:
-      - master
+      - main
       - releases/*
 jobs:
   stable-channel:

@@ -80,7 +80,9 @@ class SimpleLedger extends Ledger {
         }
 
         var r = contract.buyStablecoins(tx.amountSC);
-        if (r != amountBaseToPay) throw Exception('Something is dodgy here.');
+        if (r != amountBaseToPay) {
+          throw Exception('Something is dodgy here.');
+        }
 
         basecoinAccounts[tx.from] = bc - amountBaseToPay;
         stablecoinAccounts[tx.from] =

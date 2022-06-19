@@ -68,7 +68,10 @@ void main() async {
   // NOTE: refactor everything  to BigInt .ceilToDouble();
   final initialReserves = (initialSC * xrate + initialRC * pt_min);
 
-  final initBasecoinAccounts = <Address, double>{0x1: initialReserves};
+  // Put enough money to buy stablecoins by the users. + 10BN
+  final initBasecoinAccounts = <Address, double>{
+    0x1: initialReserves + 10000000000
+  };
   final initStablecoinAccounts = <Address, double>{0x1: initialSC};
   final initReservecoinAccounts = <Address, double>{0x1: initialRC};
 
@@ -112,9 +115,9 @@ class HistoricalGame extends Environment {
     contract.oracle.updateConversionRate(PegCurrency, BaseCoin, newRate);
 
     final ratio = contract.reservesRatio();
-    logging.log(
+    print(
         'Bank state: $dateTime  R: ${contract.reserves}, Nsc: ${contract.stablecoins},'
-        ' Nrc: ${contract.reservecoins}, r: $ratio');
+        ' Nrc: ${contract.reservecoins}, r: $ratio, x-rate: ${xrate[1]}');
 
     if (ratio < 1.5) {
       logging.log('Reserves ratio is below minimal limit!: $ratio');
@@ -139,8 +142,6 @@ class HistoricalGame extends Environment {
 /// The model is simple, when RCs goes below the target price e.g., 0.5 (2Shen  == 1 Djed) thie buying pressure is higher
 /// then selling one and vice versa
 ///
-/// @param address
-////
 class ReservecoinTrader extends Player {
   ReservecoinTrader(super.address);
 
@@ -152,17 +153,16 @@ class ReservecoinTrader extends Player {
 
     final currentPrice = ledger.contract.reservecoinNominalPrice();
 
-    final targetPrice = ledger.contract.reservecoinDefaultPrice;
-    //.reservecoinNominalPrice(nrc: 0);
-    // if Nrc = 0 then default reserve coin price
+    final r = ledger.contract.reservesRatio();
+    final r_opt = (ledger.contract as ExtendedDjed).optimalReservesRatio;
 
-    var buyingPressure = currentPrice != 0 ? currentPrice / targetPrice : 0.0;
+    final buyingPressure = r / r_opt;
 
-    var amount = (buyingPressure * 5000);
+    var amount = (currentPrice * 1000);
 
     final txs = _prevPrice == 0
         ? <Transaction>[]
-        : buyingPressure >= 1.0
+        : buyingPressure <= 1.0
             ? [BuyReservecoinTransaction(address, amount)]
             : [SellReservecoinTransaction(address, amount)];
 
@@ -189,27 +189,25 @@ class ReservecoinTrader extends Player {
 /// The initial market cap of the SC is 10K whihc will grow gradually to 100m in 200 days, therefore its
 /// grow can be simulated as: `10K*x^200 = 100m` e.g., x=Surd[10000,200] ~= 1.0471285
 ///
-///
-/// @param address
-////
-///
 class StablecoinUser extends Player {
   StablecoinUser(super.address);
 
   // maxAMount of 100M Djed
   static const maxAmount = 100000000;
 
-  // 5% less sells then buys to simulate constant 5% growth long term
-  static const growth = 47;
+  // 15% more buys than sells to simulate constant growth long term
+  static const growth = 65;
 
-  /// The TVL increases 0.5% per day meaning reaches 100M
+  /// The TVL increases around 1M day meaning reaches 100M
   @override
   List<Transaction> newRoundCallback(Ledger ledger, int round) {
-    var myStablecoins = ledger.stablecoinAccounts[address] ?? 0;
+    final myStablecoins = ledger.stablecoinAccounts[address] ?? 0;
 
-    final lucky = Random().nextInt(100) / growth;
+    final rand = Random().nextInt(100);
 
-    final amount = lucky * 10000.0;
+    final lucky = myStablecoins > maxAmount ? 100 / rand : growth / rand;
+
+    final amount = 10000.0;
 
     final List<Transaction> txs = (myStablecoins == 0)
         ? <Transaction>[BuyStablecoinTransaction(address, amount)]

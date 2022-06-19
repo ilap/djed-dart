@@ -1,3 +1,5 @@
+[![Pub Version (stable)](https://img.shields.io/pub/v/djed?color=important&label=pub%20stable&logo=dart)](https://pub.dartlang.org/packages/djed)
+[![Dart Test CI](https://github.com/ilap/djed-dart/actions/workflows/dart.yml/badge.svg)](https://github.com/ilap/djed-dart/actions/workflows/dart.yml)
 # Dart implementation of Djed Stablecoin
 
 Djed-Dart is the dart implementation of the official [`Scala` based Djed Stablecoin Prototype (`djed-stableccoin-prototype`)](https://github.com/input-output-hk/djed-stablecoin-prototype)

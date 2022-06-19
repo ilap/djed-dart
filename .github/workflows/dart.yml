@@ -21,8 +21,8 @@ jobs:
         channel: stable
     - uses: actions/checkout@v1
     - name: Install dependencies
-      run: pub get
+      run: dart pub get
     - name: Analyze project source
       run: dart analyze
     - name: Run tests
-      run: pub run test
+      run: dart test

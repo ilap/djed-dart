@@ -71,34 +71,34 @@ class SimpleLedger extends Ledger {
       case BuyStablecoinTransaction:
         tx as BuyStablecoinTransaction;
         final amountBaseToPay =
-            contract.calculateBasecoinsForMintedStablecoins(tx.amountSC);
+            contract.calculateBasecoinsForMintedStablecoins(tx.amount);
 
         final bc = basecoinAccounts[tx.from] ?? 0;
 
-        if (tx.amountSC <= 0 || bc < amountBaseToPay) {
+        if (tx.amount <= 0 || bc < amountBaseToPay) {
           throw Exception('Bad BuyStablecoinTransaction: $tx');
         }
 
-        var r = contract.buyStablecoins(tx.amountSC);
+        var r = contract.buyStablecoins(tx.amount);
         if (r != amountBaseToPay) {
           throw Exception('Something is dodgy here.');
         }
 
         basecoinAccounts[tx.from] = bc - amountBaseToPay;
         stablecoinAccounts[tx.from] =
-            tx.amountSC + (stablecoinAccounts[tx.from] ?? 0.0);
+            tx.amount + (stablecoinAccounts[tx.from] ?? 0.0);
 
         break;
       case SellStablecoinTransaction:
         tx as SellStablecoinTransaction;
         final scAmount = stablecoinAccounts[tx.from] ?? 0.0;
 
-        if (tx.amountSC <= 0 || scAmount < tx.amountSC) {
+        if (tx.amount <= 0 || scAmount < tx.amount) {
           throw Exception('Bad SellStablecoinTransaction: $tx');
         }
-        final amountBaseReturned = contract.sellStablecoins(tx.amountSC);
+        final amountBaseReturned = contract.sellStablecoins(tx.amount);
 
-        stablecoinAccounts[tx.from] = scAmount - tx.amountSC;
+        stablecoinAccounts[tx.from] = scAmount - tx.amount;
         basecoinAccounts[tx.from] =
             amountBaseReturned + (basecoinAccounts[tx.from] ?? 0);
 
@@ -108,30 +108,30 @@ class SimpleLedger extends Ledger {
         final bcAmount = basecoinAccounts[tx.from] ?? 0;
 
         final amountBaseToPay =
-            contract.calculateBasecoinsForMintedReservecoins(tx.amountRC);
-        if (tx.amountRC <= 0 || bcAmount < amountBaseToPay) {
+            contract.calculateBasecoinsForMintedReservecoins(tx.amount);
+        if (tx.amount <= 0 || bcAmount < amountBaseToPay) {
           throw Exception('Bad BuyReservecoinTransaction: $tx');
         }
-        if (contract.buyReservecoins(tx.amountRC) != amountBaseToPay) {
+        if (contract.buyReservecoins(tx.amount) != amountBaseToPay) {
           assert(false,
               "Expected amount is not equal to the actual. Something is wrong with the code!!!");
         }
 
         basecoinAccounts[tx.from] = bcAmount - amountBaseToPay;
         reservecoinAccounts[tx.from] =
-            tx.amountRC + (reservecoinAccounts[tx.from] ?? 0);
+            tx.amount + (reservecoinAccounts[tx.from] ?? 0);
 
         break;
       case SellReservecoinTransaction:
         tx as SellReservecoinTransaction;
         final amount = reservecoinAccounts[tx.from] ?? 0;
 
-        if (tx.amountRC <= 0 || amount < tx.amountRC) {
+        if (tx.amount <= 0 || amount < tx.amount) {
           throw Exception('Bad SellReservecoinTransaction: $tx');
         }
 
-        final amountBaseReturned = contract.sellReservecoins(tx.amountRC);
-        reservecoinAccounts[tx.from] = amount - tx.amountRC;
+        final amountBaseReturned = contract.sellReservecoins(tx.amount);
+        reservecoinAccounts[tx.from] = amount - tx.amount;
         basecoinAccounts[tx.from] =
             amountBaseReturned + (basecoinAccounts[tx.from] ?? 0);
 

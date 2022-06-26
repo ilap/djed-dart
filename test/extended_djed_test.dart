@@ -52,7 +52,7 @@ class ExtendedDjedTest {
 }
 
 void main() {
-  group('Minimal Djed Test', () {
+  group('Extended Djed Test', () {
     test('buy stablecoins when init/final reserve ratio above optimum', () {
       final contract = ExtendedDjedTest.createStablecoinContract(
           60000.0, 20000.0, 5000.0, 1.0,

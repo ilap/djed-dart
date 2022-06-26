@@ -38,19 +38,39 @@ $ popd
 
 ## Usage
 
+### Run examples
 Currently, there are three very simple simulations are in the `example` directory:
-1. `simple_extended_game.dart`
-2. `simple_minimal_game.dart`
-3. `historical_game.dart`
+1. [`simple_extended_game.dart`](example/simple_extended_game.dart)
+2. [`simple_minimal_game.dart`](example/simple_minimal_game.dart)
+3. [`historical_extended_game.dart`](example/historical_extended_game.dart)
+4. [`historical_minimal_game.dart`](example/historical_minimal_game.dart)
 
+### Run Test
+
+``` bash
+$ cd djed-dart
+$ dart test -r expanded
+...
+00:11 +27: test/extended_djed_test.dart: Extended Djed Test buy reservecoins when bankFee or k_rm equals zero
+00:14 +28: test/extended_djed_test.dart: Extended Djed Test sell reservecoins
+00:14 +29: test/extended_djed_test.dart: Extended Djed Test sell reservecoins (1-st variant): initial and new reserve ratio are below peg
+00:14 +30: test/extended_djed_test.dart: Extended Djed Test sell reservecoins (2-nd variant):initial reserve ratio is above peg but below optimum, new ratio is below peg
+00:15 +31: test/extended_djed_test.dart: Extended Djed Test sell reservecoins (3-rd variant): initial reserve ratio above the optimum, new ratio is below the peg
+00:16 +32: test/extended_djed_test.dart: Extended Djed Test sell reservecoins (4-th variant):initial and new reserve ratio are above peg but below optimum
+00:17 +33: test/extended_djed_test.dart: Extended Djed Test sell reservecoins (5-th variant): initial reserve ratio is above the optimumnew ratio is above peg but below optimal level
+00:17 +34: test/extended_djed_test.dart: Extended Djed Test sell reservecoins (6-th variant): initial and new reserve ratio are above the optimum
+00:18 +35: test/extended_djed_test.dart: Extended Djed Test sell reservecoins when initial ratio at peg/optimum boundaries
+00:18 +36: test/extended_djed_test.dart: Extended Djed Test sell reservecoins when base fee or k_rr equals zero
+00:24 +37: All tests passed!
+```
 
 ### Simple minimal game
-Thsi simple came just buys and sells the 5% of the available stablecoins for the 99% percent of the targetPrice.
+This simple came just buys and sells the 5% of the available stablecoins for the 99% percent of the targetPrice.
 ### Simple extended game
 
 Almost the same as above. The only difference is that it uses Extended Djed instead.
-### Historical extended game
-TBD
+### Historical games (extended/minimal)
+Check comments in the [historical extended game's example](example/historical_extended_game.dart)
 
 ### Simulate a game
 To run a predefined game simulation type the following into a terminal:
